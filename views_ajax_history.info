@@ -1,1 +1,6 @@
 name = Views AJAX History
+description = Add bookmaking abilities to AJAX Views.
+package = Views
+core = 7.x
+
+dependencies[] = libraries
