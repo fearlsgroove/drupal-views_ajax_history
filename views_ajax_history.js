@@ -67,8 +67,12 @@
    */
   var cleanURL = function (url, viewArgs) {
     var args = parseQueryString(url);
-    var url = url.split('?');
     var query = [];
+
+    // add 'q' with clean urls
+    if (/\?/.test(Drupal.settings.views.ajax_path)) {
+      query.push('q=' + Drupal.Views.getPath(url));
+    }
 
     $.each(args, function (name, value) {
       // use values from viewArgs if they exists
@@ -85,6 +89,7 @@
       }
     });
 
+    url = url.split('?');
     return url[0] + (query.length ? '?' + query.join('&') : '');
   };
 
