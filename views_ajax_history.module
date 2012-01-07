@@ -1,14 +1,14 @@
 <?php
 /**
  * @file
- * Add required JS to AJAX views
+ * Add required JS to AJAX views.
  */
 
 /**
  * Implements hook_views_pre_render().
  */
 function views_ajax_history_views_pre_render(&$view) {
-  if ($view->use_ajax && !($view->editing || $view->live_preview)) {
+  if ($view->use_ajax && !$view->editing) {
     $history_js = libraries_get_path('history.js') . '/scripts/bundled/html4+html5/jquery.history.js';
     drupal_add_js($history_js, array('group' => JS_LIBRARY));
     drupal_add_js(drupal_get_path('module', 'views_ajax_history') . '/views_ajax_history.js', array('weight' => 10));

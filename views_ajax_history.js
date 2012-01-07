@@ -1,26 +1,27 @@
 (function ($) {
 
-  // need to keep this to check if there are extra parameters to views
-  // have to filter views var at the same time
+  // Need to keep this to check if there are extra parameters in the original URL.
   var original = {
     path: window.location.href,
+    // @TODO integrate #1359798 without breaking history.js
     query: window.location.search || ''
   };
 
   /**
-   * Keep the original beforeSubmit to use it later
+   * Keep the original beforeSubmit method to use it later.
    */
   var beforeSubmit = Drupal.ajax.prototype.beforeSubmit;
 
   /**
-   * Keep the original beforeSerialize to use it later
+   * Keep the original beforeSerialize method to use it later.
    */
   var beforeSerialize = Drupal.ajax.prototype.beforeSerialize;
 
   /**
-   * Allow multiple value fields from Drupal.Views.parseQueryString()
+   * Modification of Drupal.Views.parseQueryString() to allow extracting multivalues fields
    *
    * @param query
+   *   String, either a full url or just the query string.
    */
   var parseQueryString = function (query) {
     var args = {};
@@ -37,9 +38,8 @@
         if (pair[0] != 'q' && pair[1]) {
           key = decodeURIComponent(pair[0].replace(/\+/g, ' '));
           value = decodeURIComponent(pair[1].replace(/\+/g, ' '));
-          // same value exists and end with []
+          // field name ends with [], it's multivalues
           if (/\[\]$/.test(key)) {
-            // make it an array if it's not already
             if (!(key in args)) {
               args[key] = [value];
             }
@@ -61,15 +61,18 @@
    * Strip views values and duplicates from URL
    *
    * @param url
+   *   String with the full URL to clean up.
    * @param viewArgs
+   *   Object containing field values from views.
    *
-   * @return url string
+   * @return url
+   *   String URL with views values and reduced duplicates.
    */
   var cleanURL = function (url, viewArgs) {
     var args = parseQueryString(url);
     var query = [];
 
-    // add 'q' with clean urls
+    // With clean urls off we need to add the 'q' parameter.
     if (/\?/.test(Drupal.settings.views.ajax_path)) {
       query.push('q=' + Drupal.Views.getPath(url));
     }
@@ -94,7 +97,14 @@
   };
 
   /**
-   * unbind statechange when adding a new state, don't need to refresh.
+   * Unbind 'statechange' when adding a new state to avoid an infinite loop.
+   *
+   * We only use the 'statechange' event to trigger refresh on back of forward click.
+   *
+   * @param options
+   *   Object containing the values from views' AJAX call.
+   * @param url
+   *   String with the current URL to be cleaned up.
    */
   var addState = function (options, url) {
     $(window).unbind('statechange', loadView);
@@ -104,13 +114,14 @@
 
   /**
    * Make an AJAX request to update the view when nagitating back and forth.
-   * @param e
    */
   var loadView = function () {
     var state = History.getState();
     var options = state.data;
 
+    // need a dummy element to trigger Drupal's AJAX call.
     var $dummy = $('<div class="ajaxHistoryDummy"/>');
+    // Drupal's AJAX options.
     var settings = $.extend({
       submit: options.data,
       setClick: true,
@@ -120,38 +131,42 @@
     }, options);
 
     new Drupal.ajax(false, $dummy[0], settings);
-    // trigger ajax call the element will be remove by the ajax insert command
+    // trigger ajax call
+    // @TODO check there is no leak, $dummy is never destroyed.
     $dummy.trigger('click');
   };
 
   /**
-   * Handle pager links
+   * Override beforeSerialize to handle click on pager links
    *
    * @param $element
+   *   jQuery DOM element
    * @param options
    */
   Drupal.ajax.prototype.beforeSerialize = function ($element, options) {
-    // don't do anything for this one
+    // If we're resoring a previous state the dummy element will have this class,
+    // and we don't need to go trough all this processing.
     if ($($element).hasClass('ajaxHistoryDummy')) {return;}
 
-    var url = original.path;
     options.url = Drupal.settings.views.ajax_path;
 
-    // it's a form, wait for beforeSubmit
-    if ($element.is(':not(form)')) {
-      if ($element.is('a')) {
-        addState(options, $element.attr('href'));
-      }
+    // Check we handle a click on a link, not a form submission.
+    if ($element.is('a')) {
+      addState(options, $element.attr('href'));
     }
+    // Call the original Drupal method with the right context.
     beforeSerialize.apply(this, arguments);
   };
 
   /**
-   * Handle exposed form submissions
+   * Override beforeSerialize to handle exposed form submissions.
    *
    * @param form_values
+   *   Object with all field values.
    * @param element
+   *   jQuery DOM form element.
    * @param options
+   *   Object containing AJAX options.
    */
   Drupal.ajax.prototype.beforeSubmit = function (form_values, element, options) {
     var url = original.path + (/\?/.test(original.path) ? '&' : '?') + element.formSerialize();
@@ -172,7 +187,7 @@
     });
 
     addState(options, url);
+    // Call the original Drupal method with the right context.
     beforeSubmit.apply(this, arguments);
   };
-
 }(jQuery));
