@@ -144,15 +144,17 @@
    * @param options
    */
   Drupal.ajax.prototype.beforeSerialize = function ($element, options) {
-    // If we're resoring a previous state the dummy element will have this class,
-    // and we don't need to go trough all this processing.
-    if ($($element).hasClass('ajaxHistoryDummy')) {return;}
+    if (options.data.view_name) {
+      // If we're restoring a previous state the dummy element will have this class,
+      // and we don't need to go trough all this processing.
+      if ($($element).hasClass('ajaxHistoryDummy')) {return;}
 
-    options.url = Drupal.settings.views.ajax_path;
+      options.url = Drupal.settings.views.ajax_path;
 
-    // Check we handle a click on a link, not a form submission.
-    if ($element.is('a')) {
-      addState(options, $element.attr('href'));
+      // Check we handle a click on a link, not a form submission.
+      if ($element.is('a')) {
+        addState(options, $element.attr('href'));
+      }
     }
     // Call the original Drupal method with the right context.
     beforeSerialize.apply(this, arguments);
@@ -169,24 +171,26 @@
    *   Object containing AJAX options.
    */
   Drupal.ajax.prototype.beforeSubmit = function (form_values, element, options) {
-    var url = original.path + (/\?/.test(original.path) ? '&' : '?') + element.formSerialize();
+    if (options.data.view_name) {
+      var url = original.path + (/\?/.test(original.path) ? '&' : '?') + element.formSerialize();
 
-    // copy selected values in history state
-    $.each(form_values, function () {
-      // field name ending with [] is a multi value field
-      if (/\[\]$/.test(this.name)) {
-        if (!options.data[this.name]) {
-          options.data[this.name] = [];
+      // copy selected values in history state
+      $.each(form_values, function () {
+        // field name ending with [] is a multi value field
+        if (/\[\]$/.test(this.name)) {
+          if (!options.data[this.name]) {
+            options.data[this.name] = [];
+          }
+          options.data[this.name].push(this.value);
         }
-        options.data[this.name].push(this.value);
-      }
-      // regular field
-      else {
-        options.data[this.name] = this.value;
-      }
-    });
+        // regular field
+        else {
+          options.data[this.name] = this.value;
+        }
+      });
 
-    addState(options, url);
+      addState(options, url);
+    }
     // Call the original Drupal method with the right context.
     beforeSubmit.apply(this, arguments);
   };
