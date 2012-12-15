@@ -161,7 +161,7 @@
   };
 
   /**
-   * Override beforeSerialize to handle exposed form submissions.
+   * Override beforeSubmit to handle exposed form submissions.
    *
    * @param form_values
    *   Object with all field values.
