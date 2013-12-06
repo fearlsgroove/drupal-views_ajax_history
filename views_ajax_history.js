@@ -17,6 +17,27 @@
    */
   var beforeSerialize = Drupal.ajax.prototype.beforeSerialize;
 
+  Drupal.behaviors.viewsAjaxHistory = {
+    attach: function (context, settings) {
+      // Init the current page too, because the first loaded pager element do
+      // not have loadable history and will not work the back button.
+      var $body = $('body').once('views-ajax-history-first-page-load');
+      if ($body.length && settings.views && settings.views.ajaxViews) {
+        for (var viewsAjaxSettingsKey in settings.views.ajaxViews) {
+          if (settings.views.ajaxViews.hasOwnProperty(viewsAjaxSettingsKey)) {
+            var viewsAjaxSettings = settings.views.ajaxViews[viewsAjaxSettingsKey];
+            viewsAjaxSettings.page = settings.viewsAjaxHistory.onloadPageItem;
+            var options = {
+              data: viewsAjaxSettings,
+              url: settings.views.ajax_path
+            };
+            addState(options, window.location.pathname + window.location.search);
+          }
+        }
+      }
+    }
+  };
+
   /**
    * Modification of Drupal.Views.parseQueryString() to allow extracting multivalues fields
    *
