@@ -9,4 +9,4 @@ INSTALLATION
 ------------
 
 download history.js from https://github.com/balupton/History.js and extract
-in a 'history.js' folder inside your libraries folder.
+it in your libraries folder. Make sure the folder name is 'history.js'.
