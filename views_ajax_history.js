@@ -2,7 +2,7 @@
 
   // Need to keep this to check if there are extra parameters in the original URL.
   var original = {
-    path: window.location.href,
+    path: window.location.pathname,
     // @TODO integrate #1359798 without breaking history.js
     query: window.location.search || ''
   };
@@ -198,7 +198,7 @@
    */
   Drupal.ajax.prototype.beforeSubmit = function (form_values, element, options) {
     if (options.data.view_name) {
-      var url = original.path + (/\?/.test(original.path) ? '&' : '?') + element.formSerialize();
+      var url = original.path + (/\?/.test(original.path) ? '&' : '?') + decodeURIComponent(element.formSerialize());
 
       // copy selected values in history state
       $.each(form_values, function () {
