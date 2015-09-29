@@ -175,8 +175,6 @@
       // and we don't need to go trough all this processing.
       if ($($element).hasClass('ajaxHistoryDummy')) {return;}
 
-      options.url = Drupal.settings.views.ajax_path;
-
       // Check we handle a click on a link, not a form submission.
       if ($element.is('a')) {
         addState(options, $element.attr('href'));
